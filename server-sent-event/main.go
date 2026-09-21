@@ -75,7 +75,7 @@ func main() {
 	// Parse Static files
 	router.StaticFile("/", "./public/index.html")
 
-	router.Run(":8085")
+	_ = router.Run(":8085")
 }
 
 // Initialize event and Start processing requests
@@ -133,9 +133,6 @@ func (stream *Event) serveHTTP() gin.HandlerFunc {
 		go func() {
 			<-c.Writer.CloseNotify()
 
-			// Drain client channel so that it does not block. Server may keep sending messages to this channel
-			for range clientChan {
-			}
 			// Send closed connection to event server
 			stream.ClosedClients <- clientChan
 		}()

@@ -1,5 +1,4 @@
 //go:build go1.8
-// +build go1.8
 
 package main
 
@@ -21,8 +20,9 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr:    ":8080",
-		Handler: router,
+		Addr:              ":8080",
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	quit := make(chan os.Signal, 1)

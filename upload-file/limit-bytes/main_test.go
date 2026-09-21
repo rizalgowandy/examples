@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"mime/multipart"
@@ -23,8 +24,8 @@ func createMultipartBody(fieldName string, size int) (contentType string, bodyBy
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	fw, _ := w.CreateFormFile(fieldName, "test.bin")
-	io.CopyN(fw, bytes.NewReader(make([]byte, size)), int64(size)) // Write 'size' bytes
-	w.Close()
+	_, _ = io.CopyN(fw, bytes.NewReader(make([]byte, size)), int64(size)) // Write 'size' bytes
+	_ = w.Close()
 	return w.FormDataContentType(), b.Bytes()
 }
 
@@ -33,7 +34,9 @@ func TestUploadWithinLimit(t *testing.T) {
 	// Prepare file just under max size
 	// Reduce file size so the total request (including multipart headers/overhead) is safely below the limit.
 	contentType, body := createMultipartBody("file", MaxUploadSize-10*1024)
-	req, _ := http.NewRequest("POST", "/upload", bytes.NewReader(body))
+	req, _ := http.NewRequestWithContext(
+		context.Background(), "POST", "/upload", bytes.NewReader(body),
+	)
 	req.Header.Set("Content-Type", contentType)
 	resp := httptest.NewRecorder()
 
@@ -49,7 +52,9 @@ func TestUploadWithinLimit(t *testing.T) {
 func TestUploadOverLimit(t *testing.T) {
 	router := setupRouter()
 	contentType, body := createMultipartBody("file", MaxUploadSize+100)
-	req, _ := http.NewRequest("POST", "/upload", bytes.NewReader(body))
+	req, _ := http.NewRequestWithContext(
+		context.Background(), "POST", "/upload", bytes.NewReader(body),
+	)
 	req.Header.Set("Content-Type", contentType)
 	resp := httptest.NewRecorder()
 
@@ -66,8 +71,8 @@ func TestUploadMissingFile(t *testing.T) {
 	router := setupRouter()
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
-	w.Close()
-	req, _ := http.NewRequest("POST", "/upload", &b)
+	_ = w.Close()
+	req, _ := http.NewRequestWithContext(context.Background(), "POST", "/upload", &b)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp := httptest.NewRecorder()
 

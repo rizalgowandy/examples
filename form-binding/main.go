@@ -8,15 +8,15 @@ import (
 )
 
 type Booking struct {
-	Name     string     `form:"name" binding:"required"`
-	CheckIn  *time.Time `form:"check_in" time_format:"2006-01-02" binding:"required"`
-	CheckOut *time.Time `form:"check_out" time_format:"2006-01-02"`
+	Name     string     `form:"name"      binding:"required"`
+	CheckIn  *time.Time `form:"check_in"  binding:"required" time_format:"2006-01-02"`
+	CheckOut *time.Time `form:"check_out"                    time_format:"2006-01-02"`
 }
 
 func main() {
 	router := gin.Default()
 	router.POST("/book", bookingHandler)
-	router.Run(":8080")
+	_ = router.Run(":8080")
 }
 
 func bookingHandler(c *gin.Context) {
